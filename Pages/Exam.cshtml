@@ -1,0 +1,118 @@
+@page
+@model Exam.Pages.ExamModel
+@{
+    ViewData["Title"] = "Online Exam";
+}
+
+<h1>Online Exam</h1>
+
+<div class="row">
+    <div class="col-md-10">
+        <form method="post">
+            <input type="hidden" asp-for="Session.SessionId" />
+            <input type="hidden" asp-for="Session.StartTime" />
+            <input type="hidden" asp-for="Session.CurrentSection" />
+            
+            @if (Model.Session.CurrentSection == 0)
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Personal Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="Session.FullName" class="form-label">Full Name</label>
+                            <input asp-for="Session.FullName" class="form-control" />
+                            <span asp-validation-for="Session.FullName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Session.Email" class="form-label">Email Address</label>
+                            <input asp-for="Session.Email" class="form-control" />
+                            <span asp-validation-for="Session.Email" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Session.RollNumber" class="form-label">Roll Number</label>
+                            <input asp-for="Session.RollNumber" class="form-control" />
+                            <span asp-validation-for="Session.RollNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="submit" name="action" value="next" class="btn btn-primary">Next Section</button>
+                </div>
+            }
+            else
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Section: @Model.CurrentSectionName</h5>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        @for (int i = 0; i < Model.CurrentQuestions.Count; i++)
+                        {
+                            var question = Model.CurrentQuestions[i];
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">@(i+1). @question.Text</label>
+                                
+                                @if (question.Type == Exam.Models.QuestionType.MultipleChoice)
+                                {
+                                    @foreach (var option in question.OptionsList)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="Responses[@question.Id]" 
+                                                   id="option_@question.Id@option.GetHashCode()" value="@option"
+                                                   @(Model.Responses.ContainsKey(question.Id) && Model.Responses[question.Id] == option ? "checked" : "") />
+                                            <label class="form-check-label" for="option_@question.Id@option.GetHashCode()">
+                                                @option
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else if (question.Type == Exam.Models.QuestionType.Essay)
+                                {
+                                    <textarea class="form-control" name="Responses[@question.Id]" rows="10">@(Model.Responses.ContainsKey(question.Id) ? Model.Responses[question.Id] : "")</textarea>
+                                }
+                                else // ShortAnswer
+                                {
+                                    <input type="text" class="form-control" name="Responses[@question.Id]" value="@(Model.Responses.ContainsKey(question.Id) ? Model.Responses[question.Id] : "")" />
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    @if (Model.Session.CurrentSection == Model.AvailableSections.Count)
+                    {
+                        <button type="submit" name="action" value="submit" class="btn btn-success">Submit Exam</button>
+                    }
+                    else
+                    {
+                        <button type="submit" name="action" value="next" class="btn btn-primary">Next Section</button>
+                    }
+                </div>
+            }
+            
+            <div class="progress mt-4">
+                @{
+                    int totalSections = Model.AvailableSections.Count + 1; // +1 for personal info section
+                    int currentProgress = Model.Session.CurrentSection + 1; // +1 because CurrentSection is 0-based
+                    int progressPercent = (int)Math.Round((double)(currentProgress) / totalSections * 100);
+                }
+                <div class="progress-bar" role="progressbar" style="width: @progressPercent%;" 
+                     aria-valuenow="@progressPercent" aria-valuemin="0" aria-valuemax="100">
+                    @progressPercent%
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

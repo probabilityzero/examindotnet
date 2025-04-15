@@ -1,0 +1,15 @@
+@page
+@model Exam.Pages.ExamSuccessModel
+@{
+    ViewData["Title"] = "Exam Submitted";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Exam Submitted Successfully!</h1>
+    <p class="lead">Thank you, @Model.FullName, for completing the exam.</p>
+    <p>Your submission has been recorded.</p>
+    <p>Session ID: @Model.SessionId</p>
+    <div class="mt-4">
+        <a href="/" class="btn btn-primary">Return to Home</a>
+    </div>
+</div>
